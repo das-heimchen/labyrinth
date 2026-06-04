@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labyrinth · Calliope-Sicht</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #181b24;
+    --line: #2a2f3c;
+    --wall: #e6e8ee;
+    --ink: #e6e8ee;
+    --muted: #8a90a0;
+    --accent: #4ea1ff;
+    --good: #3ddc84;
+    --bad: #ff5d5d;
+    --trail: #4ea1ff44;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .3px; }
+  nav { display: flex; gap: 6px; margin-left: auto; }
+  nav a {
+    color: var(--muted); text-decoration: none; padding: 6px 12px;
+    border-radius: 8px; font-size: 14px; border: 1px solid transparent;
+  }
+  nav a:hover { color: var(--ink); background: var(--panel); }
+  nav a.active { color: var(--accent); border-color: var(--line); background: var(--panel); }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 20px 60px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px;
+  }
+  h2 { font-size: 18px; margin: 0 0 4px; }
+  p.lead { color: var(--muted); margin: 0 0 18px; }
+  button {
+    font: inherit; cursor: pointer; color: var(--ink);
+    background: #222633; border: 1px solid var(--line);
+    padding: 9px 14px; border-radius: 9px;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #06121f; border-color: var(--accent); font-weight: 600; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  label.opt { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 14px; }
+  canvas { background: #0a0c12; border-radius: 10px; display: block; max-width: 100%; }
+  .stats { display: flex; gap: 22px; flex-wrap: wrap; margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+  .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* --- Solve / First-Person --- */
+  .fp {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    place-items: center; text-align: center;
+  }
+  .sensor {
+    width: 280px; height: 280px; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 700; letter-spacing: 1px; transition: background .12s, color .12s;
+    border: 2px solid var(--line);
+  }
+  .sensor.open { background: #10241a; color: var(--good); border-color: var(--good); }
+  .sensor.wall { background: #2a1212; color: var(--bad); border-color: var(--bad); }
+  .sensor .big { font-size: 64px; line-height: 1; }
+  .sensor .sub { font-size: 16px; margin-top: 10px; opacity: .85; }
+  .compass {
+    font-size: 14px; color: var(--muted);
+  }
+  .compass b { color: var(--accent); font-size: 22px; }
+  .pad {
+    display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px);
+    gap: 8px; justify-content: center;
+  }
+  .pad button { width: 56px; height: 56px; font-size: 20px; padding: 0; border-radius: 12px; }
+  .pad .k-up   { grid-column: 2; grid-row: 1; }
+  .pad .k-left { grid-column: 1; grid-row: 2; }
+  .pad .k-down { grid-column: 2; grid-row: 2; }
+  .pad .k-right{ grid-column: 3; grid-row: 2; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .win {
+    margin-top: 14px; padding: 12px 16px; border-radius: 10px;
+    background: #10241a; color: var(--good); border: 1px solid var(--good);
+    display: none;
+  }
+  .win.show { display: block; }
+  .kbd { font-family: ui-monospace, monospace; background:#222633; border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🤖 Labyrinth · Calliope-Sicht</h1>
+  <nav>
+    <a href="#display" data-route="display">Display</a>
+    <a href="#solve"   data-route="solve">Solve</a>
+    <a href="#refresh" data-route="refresh">Refresh</a>
+  </nav>
+</header>
+
+<main>
+  <!-- ===================== DISPLAY ===================== -->
+  <section class="view" id="view-display">
+    <div class="card">
+      <h2>Top-Down-Ansicht</h2>
+      <p class="lead">Die Gott-Perspektive. Hier siehst du das ganze Labyrinth — der Roboter sieht das <em>nie</em>.</p>
+      <canvas id="mazeCanvas" width="600" height="600"></canvas>
+      <div class="stats">
+        <span>Größe: <b id="d-size">–</b></span>
+        <span>Schritte: <b id="d-steps">0</b></span>
+        <span>Status: <b id="d-status">unterwegs</b></span>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <label class="opt"><input type="checkbox" id="d-fog"> Fog of War (nur Erkundetes)</label>
+        <label class="opt"><input type="checkbox" id="d-trail" checked> Laufspur</label>
+        <div style="margin-left:auto" class="row">
+          <button id="d-auto">▶︎ Auto-Solve (Rechte-Hand-Regel)</button>
+          <button id="d-reset">↺ Position zurück</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SOLVE ===================== -->
+  <section class="view" id="view-solve">
+    <div class="card fp">
+      <div class="compass">Blickrichtung: <b id="s-heading">N</b></div>
+
+      <div class="sensor" id="s-sensor">
+        <div class="big" id="s-icon">？</div>
+        <div class="sub" id="s-text">…</div>
+      </div>
+
+      <div class="pad">
+        <button class="k-up"    id="s-fwd"   title="Vorwärts (↑)">↑</button>
+        <button class="k-left"  id="s-left"  title="Links drehen (←)">⟲</button>
+        <button class="k-down"  id="s-back"  title="Umdrehen (↓)">↓</button>
+        <button class="k-right" id="s-right" title="Rechts drehen (→)">⟳</button>
+      </div>
+
+      <div class="hint">
+        <span class="kbd">↑</span> vor &nbsp; <span class="kbd">←</span> links drehen &nbsp;
+        <span class="kbd">→</span> rechts drehen &nbsp; <span class="kbd">↓</span> umdrehen
+      </div>
+      <div class="stats" style="justify-content:center">
+        <span>Schritte: <b id="s-steps">0</b></span>
+        <span>Drehungen: <b id="s-turns">0</b></span>
+      </div>
+      <div class="win" id="s-win">🎉 Ziel erreicht! Schau im <a href="#display" style="color:inherit">Display</a> nach, wie dein Weg aussah.</div>
+    </div>
+  </section>
+
+  <!-- ===================== REFRESH ===================== -->
+  <section class="view" id="view-refresh">
+    <div class="card">
+      <h2>Neues Labyrinth</h2>
+      <p class="lead">Erzeugt ein <b>perfektes</b> Labyrinth (keine Schleifen) — dadurch ist es per Rechte-Hand-Regel <b>garantiert</b> lösbar.</p>
+      <div class="row">
+        <label class="opt">Breite
+          <input type="number" id="r-w" value="12" min="4" max="40" style="width:64px;margin-left:6px;background:#222633;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px">
+        </label>
+        <label class="opt">Höhe
+          <input type="number" id="r-h" value="12" min="4" max="40" style="width:64px;margin-left:6px;background:#222633;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px">
+        </label>
+        <button class="primary" id="r-go" style="margin-left:auto">⚙︎ Generieren</button>
+      </div>
+      <p class="hint" style="margin-top:16px">Start ist oben-links, Ziel unten-rechts. Nach dem Generieren springt die App ins Display.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* ============================================================
+   Labyrinth aus Sicht eines "dummen" Calliope mini.
+   Reines Frontend: Zustand lebt in localStorage ("sticky").
+   Routen via Hash: #display | #solve | #refresh
+   ============================================================ */
+
+const STORE_KEY = "labyrinth.state.v1";
+
+// Richtungen: 0=N, 1=O, 2=S, 3=W (im Uhrzeigersinn)
+const DIRS = ["N", "O", "S", "W"];
+const DX   = [ 0,  1,  0, -1];   // Spaltenänderung pro Richtung
+const DY   = [-1,  0,  1,  0];   // Zeilenänderung pro Richtung
+const ARROW = ["↑","→","↓","←"];
+
+let state = null;   // { w, h, cells, px, py, dir, steps, turns, trail[], seen[], won }
+
+/* ---------- Labyrinth-Erzeugung: Recursive Backtracker ----------
+   Liefert ein perfektes Labyrinth. Jede Zelle hat 4 Wände (N,O,S,W).
+   Zwei Zellen sind verbunden, wenn die gemeinsame Wand entfernt wurde. */
+function generateMaze(w, h) {
+  const cells = [];
+  for (let i = 0; i < w * h; i++) cells.push({ walls: [true, true, true, true] });
+
+  const idx = (x, y) => y * w + x;
+  const visited = new Array(w * h).fill(false);
+  const stack = [[0, 0]];
+  visited[0] = true;
+
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    // unbesuchte Nachbarn sammeln
+    const opts = [];
+    for (let d = 0; d < 4; d++) {
+      const nx = x + DX[d], ny = y + DY[d];
+      if (nx >= 0 && nx < w && ny >= 0 && ny < h && !visited[idx(nx, ny)]) {
+        opts.push(d);
+      }
+    }
+    if (opts.length) {
+      const d = opts[(Math.random() * opts.length) | 0];
+      const nx = x + DX[d], ny = y + DY[d];
+      cells[idx(x, y)].walls[d] = false;          // Wand bei uns ...
+      cells[idx(nx, ny)].walls[(d + 2) % 4] = false; // ... und gegenüber öffnen
+      visited[idx(nx, ny)] = true;
+      stack.push([nx, ny]);
+    } else {
+      stack.pop();
+    }
+  }
+  return cells;
+}
+
+function newState(w, h) {
+  return {
+    w, h,
+    cells: generateMaze(w, h),
+    px: 0, py: 0, dir: 1,        // Start oben-links, Blick nach Osten
+    steps: 0, turns: 0,
+    trail: [[0, 0]],
+    seen: [[0, 0]],
+    won: false,
+  };
+}
+
+/* ---------- Persistenz ---------- */
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+/* ---------- Labyrinth-Logik ---------- */
+const cellAt = (x, y) => state.cells[y * state.w + x];
+const atGoal = () => state.px === state.w - 1 && state.py === state.h - 1;
+
+// Steht in Blickrichtung eine Wand? (das EINZIGE, was der Roboter "fühlt")
+function wallAhead() {
+  return cellAt(state.px, state.py).walls[state.dir];
+}
+
+function markSeen(x, y) {
+  if (!state.seen.some(p => p[0] === x && p[1] === y)) state.seen.push([x, y]);
+}
+
+function moveForward() {
+  if (wallAhead() || state.won) return false;
+  state.px += DX[state.dir];
+  state.py += DY[state.dir];
+  state.steps++;
+  state.trail.push([state.px, state.py]);
+  markSeen(state.px, state.py);
+  if (atGoal()) state.won = true;
+  save();
+  return true;
+}
+
+function turn(delta) {
+  state.dir = (state.dir + delta + 4) % 4;
+  state.turns++;
+  save();
+}
+
+/* ---------- Routing ---------- */
+function go(route) {
+  if (!["display", "solve", "refresh"].includes(route)) route = "display";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + route).classList.add("active");
+  document.querySelectorAll("nav a").forEach(a =>
+    a.classList.toggle("active", a.dataset.route === route));
+  if (route === "display") renderDisplay();
+  if (route === "solve") renderSolve();
+}
+
+window.addEventListener("hashchange", () => go(location.hash.slice(1)));
+
+/* ===================== DISPLAY ===================== */
+const cv = document.getElementById("mazeCanvas");
+const ctx = cv.getContext("2d");
+
+function renderDisplay() {
+  const fog = document.getElementById("d-fog").checked;
+  const showTrail = document.getElementById("d-trail").checked;
+  const { w, h } = state;
+  const pad = 16;
+  const size = Math.min(600, 600);
+  const cell = Math.floor((size - pad * 2) / Math.max(w, h));
+  cv.width = cell * w + pad * 2;
+  cv.height = cell * h + pad * 2;
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const ox = pad, oy = pad;
+
+  // Fog: nur erkundete Zellen + deren Wände zeichnen
+  const isSeen = (x, y) => !fog || state.seen.some(p => p[0] === x && p[1] === y);
+
+  // Zielzelle
+  ctx.fillStyle = "#1b3a2a";
+  if (isSeen(w - 1, h - 1)) ctx.fillRect(ox + (w - 1) * cell, oy + (h - 1) * cell, cell, cell);
+  // Startzelle
+  ctx.fillStyle = "#1b2a3a";
+  ctx.fillRect(ox, oy, cell, cell);
+
+  // Laufspur
+  if (showTrail) {
+    ctx.fillStyle = getCSS("--trail");
+    for (const [x, y] of state.trail) {
+      if (isSeen(x, y)) ctx.fillRect(ox + x * cell + cell * 0.32, oy + y * cell + cell * 0.32, cell * 0.36, cell * 0.36);
+    }
+  }
+
+  // Wände
+  ctx.strokeStyle = getCSS("--wall");
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!isSeen(x, y)) continue;
+      const c = cellAt(x, y).walls;
+      const X = ox + x * cell, Y = oy + y * cell;
+      if (c[0]) line(X, Y, X + cell, Y);                 // N
+      if (c[1]) line(X + cell, Y, X + cell, Y + cell);   // O
+      if (c[2]) line(X, Y + cell, X + cell, Y + cell);   // S
+      if (c[3]) line(X, Y, X, Y + cell);                 // W
+    }
+  }
+
+  // Roboter (Dreieck in Blickrichtung)
+  drawRobot(ox + state.px * cell, oy + state.py * cell, cell);
+
+  // Stats
+  document.getElementById("d-size").textContent = `${w} × ${h}`;
+  document.getElementById("d-steps").textContent = state.steps;
+  document.getElementById("d-status").textContent = state.won ? "🎉 gelöst" : "unterwegs";
+}
+
+function drawRobot(X, Y, cell) {
+  const cx = X + cell / 2, cy = Y + cell / 2, r = cell * 0.3;
+  const a = state.dir * Math.PI / 2;           // 0=N nach oben
+  const tip = [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  const bl  = [cx + r * Math.sin(a + 2.5), cy - r * Math.cos(a + 2.5)];
+  const br  = [cx + r * Math.sin(a - 2.5), cy - r * Math.cos(a - 2.5)];
+  ctx.beginPath();
+  ctx.moveTo(tip[0], tip[1]); ctx.lineTo(bl[0], bl[1]); ctx.lineTo(br[0], br[1]); ctx.closePath();
+  ctx.fillStyle = getCSS("--accent");
+  ctx.fill();
+}
+
+function line(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+function getCSS(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* ===================== SOLVE (First-Person, nur Front) ===================== */
+function renderSolve() {
+  const sensor = document.getElementById("s-sensor");
+  const icon = document.getElementById("s-icon");
+  const text = document.getElementById("s-text");
+  const wall = wallAhead();
+
+  sensor.classList.toggle("wall", wall);
+  sensor.classList.toggle("open", !wall);
+  icon.textContent = wall ? "🧱" : "⬛";
+  text.textContent = wall ? "WAND voraus" : "FREI voraus";
+
+  document.getElementById("s-heading").textContent = DIRS[state.dir] + " " + ARROW[state.dir];
+  document.getElementById("s-steps").textContent = state.steps;
+  document.getElementById("s-turns").textContent = state.turns;
+  document.getElementById("s-win").classList.toggle("show", state.won);
+}
+
+/* Tastatur nur relevant im Solve-View */
+window.addEventListener("keydown", (e) => {
+  if (!document.getElementById("view-solve").classList.contains("active")) return;
+  let handled = true;
+  switch (e.key) {
+    case "ArrowUp":    moveForward(); break;
+    case "ArrowLeft":  turn(-1); break;
+    case "ArrowRight": turn(1); break;
+    case "ArrowDown":  turn(2); break;
+    default: handled = false;
+  }
+  if (handled) { e.preventDefault(); renderSolve(); }
+});
+
+/* ===================== Wiring ===================== */
+function bind() {
+  // Solve-Buttons
+  document.getElementById("s-fwd").onclick   = () => { moveForward(); renderSolve(); };
+  document.getElementById("s-left").onclick  = () => { turn(-1); renderSolve(); };
+  document.getElementById("s-right").onclick = () => { turn(1); renderSolve(); };
+  document.getElementById("s-back").onclick  = () => { turn(2); renderSolve(); };
+
+  // Display-Buttons
+  document.getElementById("d-fog").onchange   = renderDisplay;
+  document.getElementById("d-trail").onchange = renderDisplay;
+  document.getElementById("d-reset").onclick  = () => {
+    state.px = 0; state.py = 0; state.dir = 1; state.steps = 0; state.turns = 0;
+    state.trail = [[0, 0]]; state.seen = [[0, 0]]; state.won = false;
+    save(); renderDisplay();
+  };
+  document.getElementById("d-auto").onclick = autoSolve;
+
+  // Refresh
+  document.getElementById("r-go").onclick = () => {
+    const w = clamp(+document.getElementById("r-w").value, 4, 40);
+    const h = clamp(+document.getElementById("r-h").value, 4, 40);
+    state = newState(w, h); save();
+    location.hash = "#display";
+  };
+}
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n | 0));
+
+/* Auto-Solve: Rechte-Hand-Regel, animiert.
+   Beachte: hier "fühlt" der Algorithmus auch rechts/vorne/links —
+   genau das, was der Mensch im Solve-View durch Drehen manuell tun muss. */
+let autoTimer = null;
+function autoSolve() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; document.getElementById("d-auto").textContent = "▶︎ Auto-Solve (Rechte-Hand-Regel)"; return; }
+  document.getElementById("d-auto").textContent = "⏸ Stop";
+  autoTimer = setInterval(() => {
+    if (state.won) { clearInterval(autoTimer); autoTimer = null; document.getElementById("d-auto").textContent = "▶︎ Auto-Solve (Rechte-Hand-Regel)"; renderDisplay(); return; }
+    const w = state.cells[state.py * state.w + state.px].walls;
+    const right = (state.dir + 1) % 4, left = (state.dir + 3) % 4, back = (state.dir + 2) % 4;
+    if (!w[right])      state.dir = right;   // rechts frei -> rechts drehen
+    else if (!w[state.dir]) { /* geradeaus */ }
+    else if (!w[left])  state.dir = left;    // sonst links
+    else                state.dir = back;    // Sackgasse -> umdrehen
+    moveForward();
+    renderDisplay();
+  }, 90);
+}
+
+/* ===================== Boot ===================== */
+state = load() || newState(12, 12);
+save();
+bind();
+if (!location.hash) location.hash = "#display";
+go(location.hash.slice(1) || "display");
+</script>
+</body>
+</html>
