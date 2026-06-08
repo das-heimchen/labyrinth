@@ -58,6 +58,50 @@
   .stats { display: flex; gap: 22px; flex-wrap: wrap; margin: 14px 0 0; color: var(--muted); font-size: 14px; }
   .stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
 
+  /* --- Cockpit (zweite Solve-Seite: Scratch-Blöcke + Roboter) --- */
+  .cockpit { display: flex; flex-direction: column; gap: 18px; }
+  .ck-top { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 18px; align-items: start; }
+  @media (max-width: 740px) { .ck-top { grid-template-columns: 1fr; } }
+  .ck-left canvas { width: 100%; }
+  .status-bar { margin-top: 12px; padding: 10px 12px; border-radius: 9px; background:#0a0c12; border:1px solid var(--line); font-size:14px; color:var(--ink); min-height:20px; }
+  .status-bar .tag { font-weight:700; } .status-bar .tag.wall{color:var(--bad);} .status-bar .tag.open{color:var(--good);}
+  .reads { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:13px; }
+  .reads b { color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  /* Variablen-Monitore (editierbar, Scratch-Stil) */
+  .vars-title { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:7px; }
+  .vars { display:flex; flex-direction:column; gap:6px; }
+  .mon { display:flex; align-items:center; justify-content:space-between; gap:8px; background:linear-gradient(#ff9e2c,#f08c00); border:1px solid #b9700f; border-radius:8px; padding:4px 6px 4px 11px; }
+  .mon-name { color:#fff; font:700 12px ui-monospace,monospace; text-shadow:0 1px 0 rgba(0,0,0,.25); }
+  .mon-val { width:72px; border:none; border-radius:6px; padding:4px 7px; font:700 12px ui-monospace,monospace; text-align:right; color:#1a1a1a; }
+  .cal { margin-top:12px; padding:9px 11px; border-radius:8px; background:#0a0c12; border:1px solid var(--line); font-size:12.5px; color:var(--muted); line-height:1.55; }
+  .cal b { color:var(--ink); font-variant-numeric:tabular-nums; }
+  .cal .ok { color:var(--good); font-weight:700; } .cal .warn { color:#ffce4d; font-weight:700; }
+
+  /* Scratch-Blöcke (handgezeichnet, CSS) */
+  .ck-blocks { overflow:auto; padding-bottom:4px; }
+  .blocks { font:700 13px/1.15 "Helvetica Neue",Arial,sans-serif; color:#fff; display:flex; flex-wrap:wrap; gap:14px 30px; padding:4px; align-items:flex-start; }
+  .blocks .defs { display:flex; flex-direction:column; gap:16px; }
+  .blk { padding:7px 11px; border-radius:5px; margin-top:3px; box-shadow:inset 0 -2px 0 rgba(0,0,0,.18); display:flex; align-items:center; gap:7px; width:max-content; }
+  .cat-motion{background:#4c97ff;} .cat-control{background:#ffab19;} .cat-sense{background:#5cb1d6;}
+  .cat-my{background:#ff6680;} .cat-event{background:#ffbf00; color:#5b3b00;}
+  .hat { border-radius:16px 16px 5px 5px; padding-top:11px; }
+  .cblk { display:inline-block; border-radius:6px; margin-top:3px; width:max-content; }
+  .cblk-head,.cblk-mid { padding:7px 11px; display:flex; align-items:center; gap:7px; box-shadow:inset 0 -2px 0 rgba(0,0,0,.12); }
+  .cblk-head { border-radius:6px 6px 0 0; }
+  .cblk-arm { padding:4px 0 4px 12px; }
+  .cblk-inner { background:#0e1016; border-radius:0 6px 6px 0; padding:5px 6px; display:flex; flex-direction:column; align-items:flex-start; }
+  .cblk-foot { height:12px; border-radius:0 0 6px 6px; }
+  .cblk.define { background:#ff6680; }
+  .define-head { background:#e84d6c; border-radius:14px 14px 0 0; }
+  .rep { display:inline-flex; align-items:center; padding:2px 9px; border-radius:11px; font:700 11.5px ui-monospace,monospace; color:#fff; box-shadow:inset 0 0 0 1px rgba(0,0,0,.18); }
+  .rep-var { background:#f08c00; } .rep-sense { background:#3e9ac4; }
+  .boolg { display:inline-flex; align-items:center; gap:6px; background:#59c059; color:#fff; padding:3px 16px; clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%); }
+  .boolg .op { font-weight:900; }
+  .blk.on, .cblk-head.on { outline:3px solid #ffe14d; outline-offset:1px; box-shadow:0 0 12px rgba(255,225,77,.7), inset 0 -2px 0 rgba(0,0,0,.18); }
+  .def-glow { box-shadow:0 0 0 3px rgba(255,225,77,.55); border-radius:9px; }
+  .hint-cal { color:var(--muted); font-size:12px; margin-top:12px; max-width:520px; }
+
   /* --- Solve / First-Person --- */
   .fp {
     display: grid; grid-template-columns: 1fr; gap: 18px;
@@ -102,6 +146,7 @@
   <nav>
     <a href="#display" data-route="display">Display</a>
     <a href="#solve"   data-route="solve">Solve</a>
+    <a href="#cockpit" data-route="cockpit">Cockpit</a>
     <a href="#refresh" data-route="refresh">Refresh</a>
   </nav>
 </header>
@@ -155,6 +200,47 @@
         <span>Drehungen: <b id="s-turns">0</b></span>
       </div>
       <div class="win" id="s-win">🎉 Ziel erreicht! Schau im <a href="#display" style="color:inherit">Display</a> nach, wie dein Weg aussah.</div>
+    </div>
+  </section>
+
+  <!-- ===================== COCKPIT (Code + Roboter, Simulation) ===================== -->
+  <section class="view" id="view-cockpit">
+    <div class="card">
+      <h2>Roboter-Cockpit · Rechte-Hand-Regel</h2>
+      <p class="lead">Simulation des MotionKit-Programms — <b>kein echtes Fahren</b>. Der Roboter hat nur <b>einen Frontsensor</b> (Ultraschall). Um „rechts frei?" zu prüfen, muss er erst <b>nach rechts schwenken</b> und schauen.</p>
+      <div class="cockpit">
+        <div class="ck-top">
+          <div class="ck-left">
+            <canvas id="cockpitCanvas" width="460" height="460"></canvas>
+            <div class="status-bar" id="c-status">Bereit. Drücke Schritt oder Auto.</div>
+            <div class="reads">
+              <span>Blick: <b id="c-heading">–</b></span>
+              <span>Ultraschall: <b id="c-dist">–</b></span>
+              <span>Schritte: <b id="c-steps">0</b></span>
+              <span>Drehungen: <b id="c-turns">0</b></span>
+              <span>Rempler: <b id="c-bumps">0</b></span>
+            </div>
+          </div>
+          <div class="ck-side">
+            <div class="vars-title">Variablen (editierbar)</div>
+            <div class="vars" id="c-vars"></div>
+            <div class="cal" id="c-cal"></div>
+            <button id="c-std" style="margin-top:8px">↺ Standardwerte</button>
+            <div class="row" style="margin-top:14px">
+              <button id="c-step">⏭ Schritt</button>
+              <button class="primary" id="c-auto">▶︎ Auto</button>
+              <button id="c-reset">↺ Reset</button>
+            </div>
+            <label class="opt" style="margin-top:12px;display:flex">Wiedergabe
+              <input type="range" id="c-speed" min="0.3" max="1.6" value="0.8" step="0.1" style="flex:1;margin-left:10px">
+            </label>
+          </div>
+        </div>
+        <div class="ck-blocks">
+          <div class="blocks" id="c-blocks"></div>
+          <div class="hint-cal">Hinweis: <code>drehe 90°</code> und <code>Schritt vorwärts</code> klappen real nur, wenn <code>tempo_*</code> × <code>dauer_*</code> kalibriert sind. Hier steuern <code>dauer_drehung</code> / <code>dauer_schritt</code> die Animationsdauer — dreh daran und beobachte den Roboter.</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -240,6 +326,7 @@ function newState(w, h) {
     trail: [[0, 0]],
     seen: [[0, 0]],
     won: false,
+    vars: Object.assign({}, VAR_DEFAULTS),
   };
 }
 
@@ -285,14 +372,18 @@ function turn(delta) {
 }
 
 /* ---------- Routing ---------- */
+let currentRoute = null;
 function go(route) {
-  if (!["display", "solve", "refresh"].includes(route)) route = "display";
+  if (!["display", "solve", "cockpit", "refresh"].includes(route)) route = "display";
+  if (currentRoute === "cockpit" && route !== "cockpit") cockpitLeave();
+  currentRoute = route;
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-" + route).classList.add("active");
   document.querySelectorAll("nav a").forEach(a =>
     a.classList.toggle("active", a.dataset.route === route));
   if (route === "display") renderDisplay();
   if (route === "solve") renderSolve();
+  if (route === "cockpit") cockpitEnter();
 }
 
 window.addEventListener("hashchange", () => go(location.hash.slice(1)));
@@ -422,11 +513,28 @@ function bind() {
   };
   document.getElementById("d-auto").onclick = autoSolve;
 
+  // Cockpit-Buttons
+  document.getElementById("c-step").onclick  = () => cockpitStep();
+  document.getElementById("c-auto").onclick  = cockpitAuto;
+  document.getElementById("c-reset").onclick = cockpitReset;
+  // Variablen live editierbar — Kalibrier-Anzeige & Sensor sofort aktualisieren
+  document.getElementById("c-vars").addEventListener("input", (e) => {
+    const k = e.target.dataset.var; if (!k) return;
+    state.vars[k] = Math.max(0, +e.target.value || 0); save();
+    updateCal(); updateReads();
+  });
+  document.getElementById("c-std").onclick = () => {
+    state.vars = Object.assign({}, VAR_DEFAULTS); save();
+    renderVars(); updateCal(); updateReads();
+  };
+
   // Refresh
   document.getElementById("r-go").onclick = () => {
     const w = clamp(+document.getElementById("r-w").value, 4, 40);
     const h = clamp(+document.getElementById("r-h").value, 4, 40);
-    state = newState(w, h); save();
+    const keep = state.vars;            // Kalibrier-Variablen über das neue Labyrinth hinweg behalten
+    state = newState(w, h); state.vars = keep; save();
+    cockpitReset();                     // physischen Roboter auf das neue Labyrinth zurücksetzen
     location.hash = "#display";
   };
 }
@@ -452,8 +560,354 @@ function autoSolve() {
   }, 90);
 }
 
+/* ===================== COCKPIT: Code-Anzeige + gezeichneter Roboter =====================
+   Zweite Solve-Seite. Visualisiert die Rechte-Hand-Regel mit nur EINEM Frontsensor:
+   nach jedem Schritt erst nach rechts schwenken und "fühlen". Reine Simulation. */
+
+const ccv = document.getElementById("cockpitCanvas");
+const cctx = ccv.getContext("2d");
+
+// Editierbare Programm-Variablen (sticky in state.vars)
+const VAR_DEFAULTS = { tempo_schritt: 50, tempo_drehung: 40, dauer_schritt: 600, dauer_drehung: 350, grenze_cm: 10 };
+function ensureVars() {
+  if (!state.vars) state.vars = Object.assign({}, VAR_DEFAULTS);
+  for (const k in VAR_DEFAULTS) if (state.vars[k] == null) state.vars[k] = VAR_DEFAULTS[k];
+}
+
+let cockpitGen = null, cockpitTimer = null, cockpitRaf = null;
+let anim = null, lastActionDur = 200;
+
+// ---- Physik-Simulation: kontinuierliche Roboter-Pose (für Kalibrierung) ----
+const CM_PER_CELL = 10;   // 1 Gitterzelle = 10 cm
+const CAL_TURN = 14000;   // tempo_drehung·dauer_drehung, der genau 90° ergibt (Default 40·350)
+const CAL_STEP = 30000;   // tempo_schritt·dauer_schritt, der genau 1 Zelle ergibt (Default 50·600)
+const ROBOT_R  = 0.30;    // Roboter-Radius in Zellen (für Kollision)
+const turnAngle = () => state.vars.tempo_drehung * state.vars.dauer_drehung / CAL_TURN * (Math.PI / 2);
+const stepDist  = () => state.vars.tempo_schritt * state.vars.dauer_schritt / CAL_STEP;  // in Zellen
+// botT = Ziel/Logik-Pose (springt sofort), botD = angezeigte Pose (gleitet). h: 0=Nord, + = im Uhrzeigersinn
+const cp = {
+  botT: { x: 0.5, y: 0.5, h: Math.PI / 2 }, botD: { x: 0.5, y: 0.5, h: Math.PI / 2 },
+  steps: 0, turns: 0, bumps: 0, won: false, lost: false, trail: [[0.5, 0.5]], micro: 0,
+};
+
+// ---- Welcher Aufruf-Block gehört zu welcher "definiere"-Block? (für Mit-Leuchten) ----
+const DEFMAP = { tr1: "def_right", tl1: "def_left", tl2: "def_left", tl3: "def_left",
+                 fw1: "def_step", fw2: "def_step", fw3: "def_step", fw4: "def_step" };
+
+// ---- Scratch-Block-Bauer (liefern HTML) ----
+const vrep   = (name) => `<span class="rep rep-var">${name}</span>`;
+const usRep  = () => `<span class="rep rep-sense">Ultraschall cm</span>`;
+const boolGT = (a, b) => `<span class="boolg">${a}<span class="op">&gt;</span>${b}</span>`;
+const motor  = (side, dir, tv) => `<div class="blk cat-motion">Motor ${side} ${dir} · Tempo ${vrep(tv)}</div>`;
+const warte  = (tv) => `<div class="blk cat-control">warte ${vrep(tv)} ms</div>`;
+const stopM  = () => `<div class="blk cat-motion">Motoren anhalten</div>`;
+const call   = (label, bid) => `<div class="blk cat-my" data-bid="${bid}">${label}</div>`;
+const hat    = (txt) => `<div class="blk hat cat-event">${txt}</div>`;
+const cForever = (body) =>
+  `<div class="cblk cat-control"><div class="cblk-head">wiederhole fortlaufend</div>` +
+  `<div class="cblk-arm"><div class="cblk-inner">${body}</div></div><div class="cblk-foot"></div></div>`;
+const cIf = (condId, cond, body, elseBody) =>
+  `<div class="cblk cat-control"><div class="cblk-head" data-bid="${condId}">falls ${cond} , dann</div>` +
+  `<div class="cblk-arm"><div class="cblk-inner">${body}</div></div>` +
+  `<div class="cblk-mid">sonst</div><div class="cblk-arm"><div class="cblk-inner">${elseBody}</div></div>` +
+  `<div class="cblk-foot"></div></div>`;
+const cDefine = (id, label, body) =>
+  `<div class="cblk define" id="${id}"><div class="cblk-head define-head">definiere · ${label}</div>` +
+  `<div class="cblk-arm"><div class="cblk-inner">${body}</div></div><div class="cblk-foot"></div></div>`;
+
+function renderVars() {
+  document.getElementById("c-vars").innerHTML = Object.keys(VAR_DEFAULTS).map(k =>
+    `<div class="mon"><span class="mon-name">${k}</span>` +
+    `<input class="mon-val" type="number" min="0" data-var="${k}" value="${state.vars[k]}"></div>`).join("");
+}
+
+function renderBlocks() {
+  const cond = () => boolGT(usRep(), vrep("grenze_cm"));
+  // verschachtelte Rechte-Hand-Regel (rechts -> geradeaus -> links -> umdrehen)
+  const inner3 = cIf("if3", cond(), call("Schritt vorwärts", "fw3"),
+                  call("drehe links 90°", "tl3") + call("Schritt vorwärts", "fw4"));
+  const inner2 = cIf("if2", cond(), call("Schritt vorwärts", "fw2"),
+                  call("drehe links 90°", "tl2") + inner3);
+  const inner1 = cIf("if1", cond(), call("Schritt vorwärts", "fw1"),
+                  call("drehe links 90°", "tl1") + inner2);
+  const main = hat("wenn Knopf A gedrückt") +
+               cForever(call("drehe rechts 90°", "tr1") + inner1);
+
+  const defStep = cDefine("def_step", "Schritt vorwärts",
+    motor("links", "vorwärts", "tempo_schritt") + motor("rechts", "vorwärts", "tempo_schritt") +
+    warte("dauer_schritt") + stopM());
+  const defRight = cDefine("def_right", "drehe rechts 90°",
+    motor("links", "vorwärts", "tempo_drehung") + motor("rechts", "rückwärts", "tempo_drehung") +
+    warte("dauer_drehung") + stopM());
+  const defLeft = cDefine("def_left", "drehe links 90°",
+    motor("links", "rückwärts", "tempo_drehung") + motor("rechts", "vorwärts", "tempo_drehung") +
+    warte("dauer_drehung") + stopM());
+
+  document.getElementById("c-blocks").innerHTML =
+    `<div class="group main">${main}</div>` +
+    `<div class="group defs">${defRight}${defLeft}${defStep}</div>`;
+}
+
+// aktiven Block (und zugehörige definiere-Block) hervorheben
+function setBlk(id) {
+  document.querySelectorAll(".blk.on, .cblk-head.on, .def-glow").forEach(el => el.classList.remove("on", "def-glow"));
+  if (!id) return;
+  const el = document.querySelector(`[data-bid="${id}"]`); if (el) el.classList.add("on");
+  const d = DEFMAP[id]; if (d) { const de = document.getElementById(d); if (de) de.classList.add("def-glow"); }
+}
+
+// ---- gezeichneter Calliope mini + MotionKit von oben ----
+function drawBot(px, py, cell, angle, free) {
+  const cx = px, cy = py, s = cell * 0.92;       // Roboter etwas kleiner als Zelle
+  cctx.save();
+  cctx.translate(cx, cy);
+  cctx.rotate(angle);                            // 0 = Norden (vorne = -y)
+
+  // Sensor-Kegel nach vorne (Ultraschall)
+  const reach = cell * (free ? 1.35 : 0.62), spread = 0.38;
+  const fx = -s * 0.42;                          // Sensor sitzt vorne
+  cctx.beginPath();
+  cctx.moveTo(0, fx);
+  cctx.lineTo(Math.sin(-spread) * reach, fx - Math.cos(spread) * reach);
+  cctx.lineTo(Math.sin( spread) * reach, fx - Math.cos(spread) * reach);
+  cctx.closePath();
+  cctx.fillStyle = free ? "rgba(61,220,132,0.20)" : "rgba(255,93,93,0.28)";
+  cctx.fill();
+
+  // Räder (links/rechts, dunkel)
+  cctx.fillStyle = "#15171d";
+  rrect(-s * 0.5, -s * 0.22, s * 0.16, s * 0.44, 3);
+  rrect( s * 0.5 - s * 0.16, -s * 0.22, s * 0.16, s * 0.44, 3);
+
+  // Chassis-Platine
+  cctx.fillStyle = "#23272f";
+  rrect(-s * 0.34, -s * 0.42, s * 0.68, s * 0.84, 6);
+
+  // Calliope-Board (heller, mittig) + 5x5 LED-Matrix
+  cctx.fillStyle = "#2e333d";
+  rrect(-s * 0.24, -s * 0.16, s * 0.48, s * 0.5, 4);
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    cctx.fillStyle = (r + c) % 3 === 0 ? "#ff5d5d" : "#3a2024";
+    cctx.fillRect(-s * 0.18 + c * s * 0.082, -s * 0.1 + r * s * 0.085, s * 0.04, s * 0.04);
+  }
+
+  // Ultraschall-Modul vorne (blau, zwei "Augen")
+  cctx.fillStyle = "#3d4cff";
+  rrect(-s * 0.22, -s * 0.46, s * 0.44, s * 0.14, 4);
+  cctx.fillStyle = "#11142a";
+  circle(-s * 0.1, -s * 0.39, s * 0.05);
+  circle( s * 0.1, -s * 0.39, s * 0.05);
+
+  cctx.restore();
+}
+function rrect(x, y, w, h, r) { cctx.beginPath(); cctx.roundRect(x, y, w, h, r); cctx.fill(); }
+function circle(x, y, r) { cctx.beginPath(); cctx.arc(x, y, r, 0, Math.PI * 2); cctx.fill(); }
+
+function drawCockpit() {
+  const { w, h } = state;
+  const pad = 14;
+  const cell = Math.floor((460 - pad * 2) / Math.max(w, h));
+  ccv.width = cell * w + pad * 2;
+  ccv.height = cell * h + pad * 2;
+  const ox = pad, oy = pad;
+  cctx.clearRect(0, 0, ccv.width, ccv.height);
+
+  // Ziel & Start
+  cctx.fillStyle = "#1b3a2a"; cctx.fillRect(ox + (w - 1) * cell, oy + (h - 1) * cell, cell, cell);
+  cctx.fillStyle = "#1b2a3a"; cctx.fillRect(ox, oy, cell, cell);
+
+  // Laufspur (kontinuierlich)
+  cctx.strokeStyle = "rgba(78,161,255,0.55)"; cctx.lineWidth = Math.max(2, cell * 0.1); cctx.lineCap = "round"; cctx.lineJoin = "round";
+  cctx.beginPath();
+  cp.trail.forEach((p, i) => { const X = ox + p[0] * cell, Y = oy + p[1] * cell; i ? cctx.lineTo(X, Y) : cctx.moveTo(X, Y); });
+  cctx.stroke();
+
+  // Wände
+  cctx.strokeStyle = getCSS("--wall"); cctx.lineWidth = 2; cctx.lineCap = "round";
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const c = cellAt(x, y).walls, X = ox + x * cell, Y = oy + y * cell;
+    if (c[0]) cline(X, Y, X + cell, Y);
+    if (c[1]) cline(X + cell, Y, X + cell, Y + cell);
+    if (c[2]) cline(X, Y + cell, X + cell, Y + cell);
+    if (c[3]) cline(X, Y, X, Y + cell);
+  }
+
+  // Ultraschall-Strahl an der angezeigten Pose
+  const dr = rayDist(cp.botD.x, cp.botD.y, cp.botD.h);
+  const free = dr * CM_PER_CELL > state.vars.grenze_cm;
+  const ex = cp.botD.x + Math.sin(cp.botD.h) * dr, ey = cp.botD.y - Math.cos(cp.botD.h) * dr;
+  cctx.strokeStyle = free ? "rgba(61,220,132,0.75)" : "rgba(255,93,93,0.9)";
+  cctx.lineWidth = 2; cctx.setLineDash([4, 3]);
+  cline(ox + cp.botD.x * cell, oy + cp.botD.y * cell, ox + ex * cell, oy + ey * cell);
+  cctx.setLineDash([]);
+
+  // Roboter an interpolierter Pose
+  drawBot(ox + cp.botD.x * cell, oy + cp.botD.y * cell, cell, cp.botD.h, free);
+}
+function cline(x1, y1, x2, y2) { cctx.beginPath(); cctx.moveTo(x1, y1); cctx.lineTo(x2, y2); cctx.stroke(); }
+
+// Zeitbasierte Animation: Dauer kommt aus dauer_drehung / dauer_schritt
+function startTween(kind) {
+  const dur = kind === "turn" ? Math.max(60, +state.vars.dauer_drehung)
+            : kind === "move" ? Math.max(60, +state.vars.dauer_schritt) : 180;
+  anim = { x0: cp.botD.x, y0: cp.botD.y, a0: cp.botD.h,
+           x1: cp.botT.x, y1: cp.botT.y, a1: cp.botT.h, start: performance.now(), dur };
+}
+function cockpitTick() {
+  if (anim) {
+    let p = (performance.now() - anim.start) / anim.dur; if (p > 1) p = 1;
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;   // easeInOutQuad
+    cp.botD.x = anim.x0 + (anim.x1 - anim.x0) * e;
+    cp.botD.y = anim.y0 + (anim.y1 - anim.y0) * e;
+    cp.botD.h = anim.a0 + (anim.a1 - anim.a0) * e;
+    if (p >= 1) anim = null;
+  }
+  drawCockpit();
+  cockpitRaf = requestAnimationFrame(cockpitTick);
+}
+
+// ---- Physik-Primitive (benutzen die Variablen WIRKLICH) ----
+function cStatus(html) { document.getElementById("c-status").innerHTML = html; }
+
+// Ultraschall-Raycast: Abstand (in Zellen) bis zur ersten Wand in Blickrichtung h
+function rayDist(x, y, h) {
+  const dx = Math.sin(h), dy = -Math.cos(h), step = 0.02;
+  let cx = Math.floor(x), cy = Math.floor(y), px = x, py = y, dist = 0;
+  for (let i = 0; i < 3000; i++) {
+    const nx = px + dx * step, ny = py + dy * step, ncx = Math.floor(nx), ncy = Math.floor(ny);
+    if (ncx !== cx || ncy !== cy) {
+      if (ncx < 0 || ncy < 0 || ncx >= state.w || ncy >= state.h) return dist;
+      if (ncx !== cx && cellAt(cx, cy).walls[ncx > cx ? 1 : 3]) return dist;
+      if (ncy !== cy && cellAt(cx, cy).walls[ncy > cy ? 2 : 0]) return dist;
+      cx = ncx; cy = ncy;
+    }
+    px = nx; py = ny; dist += step;
+    if (dist > 40) break;
+  }
+  return dist;
+}
+// Der EINZIGE Sensor: Front frei? = gemessener cm-Wert > grenze_cm
+function senseFree() { return rayDist(cp.botT.x, cp.botT.y, cp.botT.h) * CM_PER_CELL > state.vars.grenze_cm; }
+
+// drehe um den KALIBRIERTEN Winkel (kann ≠ 90° sein, wenn tempo/dauer falsch!)
+function physTurn(sign) {
+  cp.botT.h += sign * turnAngle();
+  cp.turns++; lastActionDur = +state.vars.dauer_drehung; startTween("turn");
+}
+// fahre die KALIBRIERTE Strecke vorwärts; an einer Wand bleibt der Roboter stecken (Rempler)
+function physStep() {
+  const want = stepDist();
+  const free = rayDist(cp.botT.x, cp.botT.y, cp.botT.h);
+  const actual = Math.min(want, Math.max(0, free - ROBOT_R));
+  cp.botT.x += Math.sin(cp.botT.h) * actual;
+  cp.botT.y -= Math.cos(cp.botT.h) * actual;
+  if (actual < want - 1e-3) cp.bumps++;
+  cp.steps++;
+  cp.trail.push([cp.botT.x, cp.botT.y]);
+  if (Math.floor(cp.botT.x) === state.w - 1 && Math.floor(cp.botT.y) === state.h - 1) cp.won = true;
+  lastActionDur = +state.vars.dauer_schritt; startTween("move");
+}
+
+// Kalibrier-Anzeige: zeigt live, was aus den Variablen physikalisch folgt
+function updateCal() {
+  const cal = document.getElementById("c-cal"); if (!cal) return;
+  const deg = turnAngle() * 180 / Math.PI, cm = stepDist() * CM_PER_CELL;
+  const dOK = Math.abs(deg - 90) < 0.5, sOK = Math.abs(cm - CM_PER_CELL) < 0.5;
+  const tag = (ok) => ok ? '<span class="ok">✓</span>' : '<span class="warn">⚠︎</span>';
+  cal.innerHTML =
+    `Drehung pro Aufruf: <b>${deg.toFixed(0)}°</b> ${tag(dOK)} &nbsp;·&nbsp; Schritt: <b>${cm.toFixed(0)} cm</b> ${tag(sOK)}<br>` +
+    `Soll: 90° und ${CM_PER_CELL} cm (= 1 Zelle). ` +
+    (dOK && sOK ? '<span class="ok">kalibriert</span>' : '<span class="warn">dejustiert → Roboter verläuft sich</span>');
+}
+function updateReads(side) {
+  const dCell = rayDist(cp.botT.x, cp.botT.y, cp.botT.h), cm = dCell * CM_PER_CELL;
+  const free = cm > state.vars.grenze_cm;
+  const deg = ((cp.botT.h * 180 / Math.PI) % 360 + 360) % 360;
+  document.getElementById("c-heading").textContent = deg.toFixed(0) + "°";
+  document.getElementById("c-dist").textContent = cm.toFixed(0) + " cm";
+  document.getElementById("c-steps").textContent = cp.steps;
+  document.getElementById("c-turns").textContent = cp.turns;
+  document.getElementById("c-bumps").textContent = cp.bumps;
+  if (side) cStatus(`Ultraschall nach <b>${side}</b>: ` +
+    (free ? '<span class="tag open">FREI</span>' : '<span class="tag wall">WAND</span>') + ` (${cm.toFixed(0)} cm)`);
+}
+
+function* rhrProgram() {
+  while (!cp.won) {
+    setBlk("tr1"); cStatus("Schwenke nach <b>rechts</b> …"); physTurn(1); yield;
+    setBlk("if1"); updateReads("rechts"); lastActionDur = 280; yield;
+    if (senseFree()) { setBlk("fw1"); cStatus("Rechts frei → <b>Schritt vorwärts</b>"); physStep(); yield; continue; }
+
+    setBlk("tl1"); cStatus("Wand rechts → zurück auf <b>geradeaus</b>"); physTurn(-1); yield;
+    setBlk("if2"); updateReads("vorne"); lastActionDur = 280; yield;
+    if (senseFree()) { setBlk("fw2"); cStatus("Geradeaus frei → <b>Schritt vorwärts</b>"); physStep(); yield; continue; }
+
+    setBlk("tl2"); cStatus("Wand vorne → schwenke nach <b>links</b>"); physTurn(-1); yield;
+    setBlk("if3"); updateReads("links"); lastActionDur = 280; yield;
+    if (senseFree()) { setBlk("fw3"); cStatus("Links frei → <b>Schritt vorwärts</b>"); physStep(); yield; continue; }
+
+    setBlk("tl3"); cStatus("Sackgasse → <b>umdrehen</b>"); physTurn(-1); yield;
+    setBlk("fw4"); cStatus("Zurück → <b>Schritt vorwärts</b>"); physStep(); yield;
+  }
+  setBlk(null);
+  cStatus('🎉 <b>Ziel erreicht!</b> ' + cp.steps + ' Schritte, ' + cp.turns + ' Drehungen, ' + cp.bumps + ' Rempler.');
+}
+
+function cockpitStep() {
+  if ((cp.won || cp.lost) && !cockpitGen) return true;
+  if (!cockpitGen) cockpitGen = rhrProgram();
+  cp.micro++;
+  if (cp.micro > 2500 && !cp.won) {
+    cp.lost = true; cockpitGen = null; setBlk(null);
+    cStatus('⚠︎ <b>Abbruch:</b> Roboter findet das Ziel nicht — Kalibrierung prüfen! (' + cp.bumps + ' Rempler)');
+    return true;
+  }
+  lastActionDur = 200;
+  const r = cockpitGen.next();
+  updateReads();
+  if (r.done) { cockpitGen = null; return true; }
+  return false;
+}
+function autoLoop() {
+  const done = cockpitStep();
+  if (done) { cockpitStop(); return; }
+  const mult = +document.getElementById("c-speed").value;     // 0.3 … 1.6
+  const wait = Math.max(130, lastActionDur * mult + 120);
+  cockpitTimer = setTimeout(autoLoop, wait);
+}
+function cockpitAuto() {
+  if (cockpitTimer) { cockpitStop(); return; }
+  if (state.won) cockpitReset();
+  document.getElementById("c-auto").textContent = "⏸ Stop";
+  autoLoop();
+}
+function cockpitStop() {
+  if (cockpitTimer) { clearTimeout(cockpitTimer); cockpitTimer = null; }
+  document.getElementById("c-auto").textContent = "▶︎ Auto";
+}
+function cockpitReset() {
+  cockpitStop();
+  cp.botT = { x: 0.5, y: 0.5, h: Math.PI / 2 };
+  cp.botD = { x: 0.5, y: 0.5, h: Math.PI / 2 };
+  cp.steps = 0; cp.turns = 0; cp.bumps = 0; cp.won = false; cp.lost = false;
+  cp.trail = [[0.5, 0.5]]; cp.micro = 0;
+  cockpitGen = null; anim = null;
+  setBlk(null); updateCal(); updateReads(); drawCockpit();
+  cStatus("Bereit. Drücke <b>Schritt</b> oder <b>Auto</b>.");
+}
+function cockpitEnter() {
+  ensureVars();
+  renderVars(); renderBlocks(); setBlk(null); updateCal(); updateReads(); drawCockpit();
+  if (!cockpitRaf) cockpitTick();
+}
+function cockpitLeave() {
+  cockpitStop();
+  if (cockpitRaf) { cancelAnimationFrame(cockpitRaf); cockpitRaf = null; }
+}
+
 /* ===================== Boot ===================== */
 state = load() || newState(12, 12);
+ensureVars();
 save();
 bind();
 if (!location.hash) location.hash = "#display";
